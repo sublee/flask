@@ -511,11 +511,13 @@ class Flask(_PackageBoundObject):
             methods = tuple(methods) + ('OPTIONS',)
             provide_automatic_options = True
         try:
+            without_subdomain = "subdomain" not in options or \
+                                not options["subdomain"]
+            without_url_prefix = "url_prefix" not in options or \
+                                 not options["url_prefix"]
             override_predefined_static = view_func.im_class is Module and \
-                                         "subdomain" in options and \
-                                         not options["subdomain"] and \
-                                         ("url_prefix" not in options or \
-                                          not options["url_prefix"]) and \
+                                         without_subdomain and \
+                                         without_url_prefix and \
                                          rule == "/static/<path:filename>"
         except AttributeError:
             override_predefined_static = False
