@@ -848,6 +848,20 @@ class ModuleTestCase(unittest.TestCase):
             # the warning for missing static_path
             assert len(captured) == 1
 
+    def test_static_path_without_url_prefix(self):
+        app = flask.Flask(__name__)
+        app.config['SERVER_NAME'] = 'example.com'
+        from testmodule import mod
+        app.register_module(mod)
+        c = app.test_client()
+        f = 'hello.txt'
+        rv = c.get('/static/' + f, 'http://example.com/')
+        assert rv.data.strip() == 'Hello Maindomain'
+        with app.test_request_context(base_url='http://example.com'):
+            assert flask.url_for('static', filename=f) == '/static/' + f
+            assert flask.url_for('static', filename=f, _external=True) \
+                == 'http://example.com/static/' + f
+
 
 class SendfileTestCase(unittest.TestCase):
 
