@@ -839,6 +839,15 @@ class ModuleTestCase(unittest.TestCase):
             else:
                 assert 0, 'expected exception'
 
+    def test_static_path_without_url_prefix(self):
+        app = flask.Flask(__name__)
+        app.config['SERVER_NAME'] = 'example.com'
+        from testmodule import mod
+        app.register_module(mod)
+        c = app.test_client()
+        rv = c.get('/static/hello.txt', 'http://example.com/')
+        assert rv.data.strip() == 'Hello Maindomain'
+
 
 class SendfileTestCase(unittest.TestCase):
 

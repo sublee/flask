@@ -29,7 +29,7 @@ from .config import ConfigAttribute, Config
 from .ctx import _RequestContext
 from .globals import _request_ctx_stack, request
 from .session import Session, _NullSession
-from .module import _ModuleSetupState
+from .module import Module, _ModuleSetupState
 from .templating import _DispatchingJinjaLoader, \
     _default_template_ctx_processor
 from .signals import request_started, request_finished, got_request_exception
@@ -510,11 +510,23 @@ class Flask(_PackageBoundObject):
         if 'OPTIONS' not in methods:
             methods = tuple(methods) + ('OPTIONS',)
             provide_automatic_options = True
-        rule = Rule(rule, methods=methods, **options)
-        rule.provide_automatic_options = provide_automatic_options
-        self.url_map.add(rule)
+        try:
+            override_predefined_static = view_func.im_class is Module and \
+                                         "subdomain" in options and \
+                                         not options["subdomain"] and \
+                                         ("url_prefix" not in options or \
+                                          not options["url_prefix"]) and \
+                                         rule == "/static/<path:filename>"
+        except AttributeError:
+            override_predefined_static = False
+        if not override_predefined_static:
+            rule = Rule(rule, methods=methods, **options)
+            rule.provide_automatic_options = provide_automatic_options
+            self.url_map.add(rule)
         if view_func is not None:
             self.view_functions[endpoint] = view_func
+            if override_predefined_static:
+                self.view_functions["static"] = view_func
 
     def route(self, rule, **options):
         """A decorator that is used to register a view function for a
