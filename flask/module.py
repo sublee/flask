@@ -44,6 +44,10 @@ def _register_module(module):
                                endpoint='%s.static' % module.name,
                                view_func=module.send_static_file,
                                subdomain=module.subdomain)
+        # overriding pre-defined static rule
+        if not module.url_prefix and not module.subdomain:
+            state.app.static_path = None
+            state.app.view_functions['static'] = module.send_static_file
     return _register
 
 
