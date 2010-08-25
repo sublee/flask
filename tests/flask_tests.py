@@ -845,8 +845,13 @@ class ModuleTestCase(unittest.TestCase):
         from testmodule import mod
         app.register_module(mod)
         c = app.test_client()
-        rv = c.get('/static/hello.txt', 'http://example.com/')
+        f = 'hello.txt'
+        rv = c.get('/static/' + f, 'http://example.com/')
         assert rv.data.strip() == 'Hello Maindomain'
+        with app.test_request_context(base_url='http://example.com'):
+            assert flask.url_for('static', filename=f) == '/static/' + f
+            assert flask.url_for('static', filename=f, _external=True) \
+                == 'http://example.com/static/' + f
 
 
 class SendfileTestCase(unittest.TestCase):
